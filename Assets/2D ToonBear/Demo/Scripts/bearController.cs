@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.IO.MemoryMappedFiles;
 
 //This Script is intended for demoing and testing animations only.
 
@@ -25,6 +26,10 @@ public class bearController : MonoBehaviour {
 
 	private Animator anim;
 
+    private float screenWidth = Screen.width;
+    private float screenHeight = Screen.height;
+    private bool right = true;
+
 	// Use this for initialization
 	void Awake ()
 	{
@@ -43,8 +48,48 @@ public class bearController : MonoBehaviour {
 
 	void Update()
 	{
-
         moveXInput = Input.GetAxis("Horizontal");
+
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            Vector3 touchPos = Camera.main.ScreenToWorldPoint(touch.position);
+            touchPos.z = 0;
+
+            //move left
+            if (touch.position.x < screenWidth / 2 && touch.phase == TouchPhase.Began)
+            {
+                right = false;
+                moveXInput = -1;
+            }
+
+            //move right
+            if (touch.position.x > screenWidth / 2 && touch.phase == TouchPhase.Began)
+            {
+                right = true;
+                moveXInput = 1;
+            }
+
+            //jump
+            if (touch.position.y > screenHeight / 2 && touch.phase == TouchPhase.Began && grounded)
+            {
+                anim.SetBool("ground", false);
+
+                GetComponent<Rigidbody2D>().velocity = new Vector2(GetComponent<Rigidbody2D>().velocity.y, jumpForce);
+            }
+        }
+        else
+        {
+            if (right)
+            {
+                moveXInput = 1;
+            }
+            else
+            {
+                moveXInput = -1;
+            }
+        }
 
         if ((grounded) && Input.GetButtonDown("Jump"))
         {
@@ -66,7 +111,7 @@ public class bearController : MonoBehaviour {
         {
             anim.SetBool("Sprint", true);
             HSpeed = 14f;
-}
+        }
         else
         {
             anim.SetBool("Sprint", false);
